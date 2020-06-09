@@ -1,0 +1,23 @@
+(* AES EBC Protocol Verifier *)
+free c: 	channel.		(* Declare the public channel for communication *)
+free key: 	bitstring [private].	(* Declare private key *)
+free plaintext: bitstring [private].	(* Declare Plaintext *)
+
+query attacker( key ).			(* Declare attacker of key *)
+query attacker( plaintext ).		(* Declare attacker of plaintext *)
+
+(* Declare the public encryption and decryption functions *)
+fun enc( bitstring, bitstring ) : bitstring.
+reduc forall p: bitstring, k: bitstring; dec( enc( p, k ), k ) = p.
+
+let clientA( p: bitstring ) = 
+	let ciphertext = enc( p, k ) in
+	out( c, ciphertext );
+
+let clientB( p: bitstring )
+	in( c, ciphertext: bitstring );
+	let p = dec( ciphertext, key ) in
+
+process
+	( ( !clientA( plaintext ) ) | ( !clientB( plaintext ) ) )
+	0
