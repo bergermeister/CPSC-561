@@ -3,21 +3,25 @@ free c: 	channel.		(* Declare the public channel for communication *)
 free key: 	bitstring [private].	(* Declare private key *)
 free plaintext: bitstring [private].	(* Declare Plaintext *)
 
+(* Declare the public encryption and decryption functions *)
+fun encrypt( bitstring, bitstring ): bitstring.
+reduc forall p: bitstring, k: bitstring; 
+	decrypt( encrypt( p, k ), k ) = p.
+
 query attacker( key ).			(* Declare attacker of key *)
 query attacker( plaintext ).		(* Declare attacker of plaintext *)
 
-(* Declare the public encryption and decryption functions *)
-fun enc( bitstring, bitstring ) : bitstring.
-reduc forall p: bitstring, k: bitstring; dec( enc( p, k ), k ) = p.
+let clientA( ) = 
+	let ciphertext = encrypt( plaintext, key ) in
+	out( c, ciphertext ).
 
-let clientA( p: bitstring ) = 
-	let ciphertext = enc( p, k ) in
-	out( c, ciphertext );
-
-let clientB( p: bitstring )
+let clientB( ) =
 	in( c, ciphertext: bitstring );
-	let p = dec( ciphertext, key ) in
+	let p = decrypt( ciphertext, key ) in
+	0.
 
 process
-	( ( !clientA( plaintext ) ) | ( !clientB( plaintext ) ) )
-	0
+	( ( !clientA() ) | ( !clientB() ) )
+(*	clientA( plaintext )*)
+(*	!clientB( plaintext )*)
+	
