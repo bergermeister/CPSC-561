@@ -51,10 +51,10 @@ int Cipher::Initialize( unsigned int keySize )
 
    unsigned int   priLen;
    unsigned char* priBuf;
-   BIO* priBio = BIO_new( BIO_s_mem( ) );
+   BIO* priBio;
    unsigned int   pubLen;
    unsigned char* pubBuf;
-   BIO* pubBio = BIO_new( BIO_s_mem( ) );
+   BIO* pubBio;
 
    /// -# Initialize key generation context
    if( EVP_PKEY_keygen_init( context ) <= 0 )
@@ -73,17 +73,21 @@ int Cipher::Initialize( unsigned int keySize )
    }
    else
    {
+      priBio = BIO_new( BIO_s_mem( ) );
       PEM_write_bio_PrivateKey( priBio, keyPair, NULL, NULL, NULL, NULL, NULL );
       priLen = BIO_pending( priBio );
       priBuf = new unsigned char[ static_cast< unsigned long long >( priLen ) + 1 ];
       BIO_read( priBio, priBuf, priLen );
       priBuf[ priLen ] = '\0';
+      BIO_free( priBio );
 
+      pubBio = BIO_new( BIO_s_mem( ) );
       PEM_write_bio_PUBKEY( pubBio, keyPair );
       pubLen = BIO_pending( pubBio );
       pubBuf = new unsigned char[ static_cast< unsigned long long >( pubLen ) + 1 ];
       BIO_read( pubBio, pubBuf, pubLen );
       pubBuf[ pubLen ] = '\0';
+      BIO_free( pubBio );
 
       this->free( );
 

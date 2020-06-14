@@ -1,6 +1,7 @@
 #include <main.h>
 #include <Key.h>
 #include <RSACryptosystem.h>
+#include <DiffieHellman.h>
 
 #include <iostream>
 using namespace SecureMigration;
@@ -13,9 +14,15 @@ int main( int argc, char** argvv )
    unsigned char       ciphertext[ keyLen ];
    unsigned char       result[ keyLen ];
    int                 length;
-   //Key* keyPub;
-   //Key* keyPri;
    RSACryptosystem::Cipher cipher;
+
+
+   DiffieHellman::Session session;
+   Key*                   params;
+
+   DiffieHellman::Session::GenerateParams( 1024, &params );
+   session.Initialize( *params );
+   //DiffieHellman::GenerateParams( 2048 );
 
    /// @par Process Design Language
    /// -# Clear buffers
