@@ -13,8 +13,9 @@ int main( int argc, char** argvv )
    unsigned char       ciphertext[ keyLen ];
    unsigned char       result[ keyLen ];
    int                 length;
-   Key* keyPub;
-   Key* keyPri;
+   //Key* keyPub;
+   //Key* keyPri;
+   RSACryptosystem::Cipher cipher;
 
    /// @par Process Design Language
    /// -# Clear buffers
@@ -22,24 +23,25 @@ int main( int argc, char** argvv )
    std::memset( reinterpret_cast< void* >( result ), 0, keyLen );
 
    /// -# Generate Public/Private Key Pair
-   RSACryptosystem::GenerateKeyPair( keyLen, &keyPub, &keyPri );
-
+   if( cipher.Initialize( keyLen ) != 0 )
+   {
+      status = 1;
+   }
    /// -# Encrypt plaintext
-   length = RSACryptosystem::Encrypt( plaintext, ciphertext, 13, *keyPub );
-
+   else if( ( length = cipher.Encrypt( plaintext, ciphertext, strlen( ( const char* )plaintext ), *cipher.PublicKey( ) ) ) < 0 )
+   {
+      status = 2;
+   }
    /// -# Decrypt ciphertext
-   length = RSACryptosystem::Decrypt( ciphertext, result, length, *keyPri );
+   else if( ( length = cipher.Decrypt( ciphertext, result, length ) ) < 0 )
+   {
+      status = 3;
+   }
 
    /// -# Print components
-   std::cout << keyPub->Buffer( ) << std::endl;
-   std::cout << keyPri->Buffer( ) << std::endl;
    std::cout << "Plaintext: " << std::endl << plaintext << std::endl;
    std::cout << "Ciphertext: " << std::endl << ciphertext << std::endl;
    std::cout << "Decrypted: " << std::endl << result << std::endl;
-
-   /// -# Free allocated memory
-   delete keyPub;
-   delete keyPri;
 
    return( status );
 }

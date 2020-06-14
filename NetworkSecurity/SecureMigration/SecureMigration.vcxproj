@@ -155,11 +155,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DiffieHellman.cpp" />
     <ClCompile Include="Key.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RSACryptosystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DiffieHellman.h" />
     <ClInclude Include="Key.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="RSACryptosystem.h" />

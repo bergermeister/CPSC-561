@@ -9,45 +9,45 @@
 using namespace SecureMigration;
 using namespace SecureMigration::RSACryptosystem;
 
-/*
-int RSACryptosystem::GenerateKeyPair( unsigned int keySize, Key** keyPub, Key** keyPri )
+Cipher::Cipher( void )
 {
-   int status = 0;
- 
-   unsigned int   priLen;
-   unsigned char* priBuf;
-   BIO*           priBio = BIO_new( BIO_s_mem( ) );
-   unsigned int   pubLen;
-   unsigned char* pubBuf;
-   BIO*           pubBio = BIO_new( BIO_s_mem( ) );
-   RSA*           keyPair;
-
-   // Generate Key Pair
-   keyPair = RSA_generate_key( keySize, 3, NULL, NULL );
-   PEM_write_bio_RSAPrivateKey( priBio, keyPair, NULL, NULL, 0, NULL, NULL );
-   priLen = BIO_pending( priBio );
-   priBuf = new unsigned char[ priLen +1 ];
-   BIO_read( priBio, priBuf, priLen );
-   priBuf[ priLen ] = '\0';
-
-   PEM_write_bio_RSAPublicKey( pubBio, keyPair );
-   pubLen = BIO_pending( pubBio );
-   pubBuf = new unsigned char[ pubLen + 1 ];
-   BIO_read( pubBio, pubBuf, pubLen );
-   pubBuf[ pubLen ] = '\0';
-
-   *keyPub = new Key( pubBuf, pubLen );
-   *keyPri = new Key( priBuf, priLen );
-
-   return( status );
+   this->keyPublic = nullptr;
+   this->keyPrivate = nullptr;
 }
-*/
 
-int RSACryptosystem::GenerateKeyPair( unsigned int keySize, Key** keyPub, Key** keyPri )
+Cipher::~Cipher( void )
+{
+   delete this->keyPrivate;
+   delete this->keyPublic;
+}
+
+Cipher::Cipher( const Cipher& cipher )
+{
+   *this = cipher;
+}
+
+Cipher& Cipher::Cipher::operator=( const Cipher& cipher )
+{
+   if( this != &cipher )
+   {
+      if( cipher.keyPrivate != nullptr )
+      {
+         this->keyPrivate = new Key( *cipher.keyPrivate );
+      }
+      if( cipher.keyPublic != nullptr )
+      {
+         this->keyPublic = new Key( *cipher.keyPublic );
+      }
+   }
+
+   return( *this );
+}
+
+int Cipher::Initialize( unsigned int keySize )
 {
    int           status = 0;
    EVP_PKEY_CTX* context = EVP_PKEY_CTX_new_id( EVP_PKEY_RSA, NULL );
-   EVP_PKEY*     keyPair = NULL;
+   EVP_PKEY* keyPair = NULL;
 
    unsigned int   priLen;
    unsigned char* priBuf;
@@ -84,9 +84,11 @@ int RSACryptosystem::GenerateKeyPair( unsigned int keySize, Key** keyPub, Key** 
       pubBuf = new unsigned char[ static_cast< unsigned long long >( pubLen ) + 1 ];
       BIO_read( pubBio, pubBuf, pubLen );
       pubBuf[ pubLen ] = '\0';
-      
-      *keyPub = new Key( pubBuf, pubLen );
-      *keyPri = new Key( priBuf, priLen );
+
+      this->free( );
+
+      this->keyPrivate = new Key( priBuf, priLen );
+      this->keyPublic = new Key( pubBuf, pubLen );
    }
 
    EVP_PKEY_CTX_free( context );
@@ -94,14 +96,13 @@ int RSACryptosystem::GenerateKeyPair( unsigned int keySize, Key** keyPub, Key** 
    return( status );
 }
 
-
-int RSACryptosystem::Encrypt( const unsigned char* plaintext, unsigned char* ciphertext, int length, const Key& keyPub )
+int Cipher::Encrypt( const unsigned char* plaintext, unsigned char* ciphertext, int length, const Key& keyPub )
 {
    int status = 0;
-   
+
    BIO* key = NULL;
    RSA* rsa = NULL;
-   
+
    if( ( key = BIO_new_mem_buf( keyPub.Buffer( ), -1 ) ) == NULL )
    {
       status = -1;
@@ -121,14 +122,18 @@ int RSACryptosystem::Encrypt( const unsigned char* plaintext, unsigned char* cip
    return( status );
 }
 
-int RSACryptosystem::Decrypt( const unsigned char* ciphertext, unsigned char* plaintext, int length, const Key& keyPri )
+int Cipher::Decrypt( const unsigned char* ciphertext, unsigned char* plaintext, int length )
 {
    int status = 0;
 
    BIO* key = nullptr;
    RSA* rsa = nullptr;
 
-   if( ( key = BIO_new_mem_buf( keyPri.Buffer( ), -1 ) ) == NULL )
+   if( this->keyPrivate == nullptr )
+   {
+      status = -3;
+   }
+   else if( ( key = BIO_new_mem_buf( this->keyPrivate->Buffer( ), -1 ) ) == NULL )
    {
       status = -1;
    }
@@ -145,5 +150,26 @@ int RSACryptosystem::Decrypt( const unsigned char* ciphertext, unsigned char* pl
    }
 
    return( status );
+}
+
+const Key* Cipher::PublicKey( void ) const
+{
+   return( this->keyPublic );
+}
+
+void Cipher::free( void )
+{
+   if( this->keyPublic != nullptr )
+   {
+      delete this->keyPublic;
+   }
+
+   if( this->keyPrivate != nullptr )
+   {
+      delete this->keyPrivate;
+   }
+
+   this->keyPublic = nullptr;
+   this->keyPrivate = nullptr;
 }
 
