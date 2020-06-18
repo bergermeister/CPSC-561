@@ -41,6 +41,20 @@ Key& Key::operator=( const Key& key )
    return( *this );
 }
 
+bool Key::operator==( const Key& key ) const
+{
+   bool equal = false;
+
+   if( this->length == key.length )
+   {
+      equal = ( std::memcmp( reinterpret_cast< const void* >( this->buffer ),
+                             reinterpret_cast< const void* >( key.buffer ),
+                             this->length ) == 0 );
+   }
+
+   return( equal );
+}
+
 const unsigned char* Key::Buffer( void ) const
 {
    return( this->buffer );

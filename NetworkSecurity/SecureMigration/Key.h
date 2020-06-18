@@ -14,6 +14,7 @@ namespace SecureMigration
 
       Key( const Key& key );
       Key& operator=( const Key& key );
+      bool operator==( const Key& key ) const;
 
       const unsigned char* Buffer( void ) const;
       const unsigned int   Length( void ) const;

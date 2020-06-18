@@ -17,12 +17,53 @@ int main( int argc, char** argvv )
    RSACryptosystem::Cipher cipher;
 
 
-   DiffieHellman::Session session;
+   DiffieHellman::Session Alice;
+   DiffieHellman::Session Bob;
+   DiffieHellman::Session Carol;
    Key*                   params;
+   Key*                   keyGab;
+   Key*                   keyGac;
+   Key*                   keyGbc;
 
+   /// -# Generate Diffie-Hellman Parameters
    DiffieHellman::Session::GenerateParams( 1024, &params );
-   session.Initialize( *params );
-   //DiffieHellman::GenerateParams( 2048 );
+
+   /// -# Distribute Diffie-Hellman Parameters to all clients
+   Alice.Initialize( *params );
+   Bob.Initialize( *params );
+   Carol.Initialize( *params );
+
+   /// -# Simple example of Alice and Bob Sharing a Key
+   Alice.Derive( *Bob.PublicKey( ) );
+   Bob.Derive( *Alice.PublicKey( ) );
+   if( *Alice.Secret( ) == *Bob.Secret( ) )
+   {
+      std::cout << "Alice and Bob exchange secret keys:" << std::endl;
+      std::cout << Alice.Secret( )->Buffer( ) << std::endl;
+      std::cout << Bob.Secret( )->Buffer( ) << std::endl;
+   }
+
+   /// -# Derive Intermediate Public Key
+   Bob.Derive( *Alice.PublicKey( ) );
+   keyGab = new Key( *Bob.Secret( ) );
+   
+   Carol.Derive( *Alice.PublicKey( ) );
+   keyGac = new Key( *Carol.Secret( ) );
+
+   Carol.Derive( *Bob.PublicKey( ) );
+   keyGbc = new Key( *Carol.Secret( ) );
+
+   /// -# Derive Shared Secrets
+   Alice.Derive( *keyGbc );
+   Bob.Derive( *keyGac );
+   Carol.Derive( *keyGab );
+
+   if( ( *Alice.Secret( ) == *Bob.Secret( ) ) && ( *Alice.Secret( ) == *Carol.Secret( ) ) )
+   {
+      std::cout << Alice.Secret( )->Buffer( ) << std::endl;
+      std::cout << Bob.Secret( )->Buffer( ) << std::endl;
+      std::cout << Carol.Secret( )->Buffer( ) << std::endl;
+   }
 
    /// @par Process Design Language
    /// -# Clear buffers
@@ -35,7 +76,7 @@ int main( int argc, char** argvv )
       status = 1;
    }
    /// -# Encrypt plaintext
-   else if( ( length = cipher.Encrypt( plaintext, ciphertext, strlen( ( const char* )plaintext ), *cipher.PublicKey( ) ) ) < 0 )
+   else if( ( length = cipher.Encrypt( plaintext, ciphertext, ( size_t )strlen( ( const char* )plaintext ), *cipher.PublicKey( ) ) ) < 0 )
    {
       status = 2;
    }
