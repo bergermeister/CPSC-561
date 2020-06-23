@@ -93,6 +93,8 @@ int Cipher::Initialize( unsigned int keySize )
 
       this->keyPrivate = new Key( priBuf, priLen );
       this->keyPublic = new Key( pubBuf, pubLen );
+      delete[ ] priBuf;
+      delete[ ] pubBuf;
    }
 
    EVP_PKEY_CTX_free( context );
@@ -138,6 +140,62 @@ int Cipher::Decrypt( const unsigned char* ciphertext, unsigned char* plaintext, 
       status = -3;
    }
    else if( ( key = BIO_new_mem_buf( this->keyPrivate->Buffer( ), -1 ) ) == NULL )
+   {
+      status = -1;
+   }
+   else if( ( rsa = PEM_read_bio_RSAPrivateKey( key, &rsa, NULL, NULL ) ) == NULL )
+   {
+      status = -2;
+      BIO_free( key );
+   }
+   else
+   {
+      status = RSA_private_decrypt( length, ciphertext, plaintext, rsa, RSA_PKCS1_PADDING );
+      BIO_free( key );
+      RSA_free( rsa );
+   }
+
+   return( status );
+}
+
+int Cipher::Sign( const unsigned char* plaintext, unsigned char* ciphertext, int length )
+{
+   int status = 0;
+
+   BIO* key = NULL;
+   RSA* rsa = NULL;
+
+   if( this->keyPrivate == nullptr )
+   {
+      status = -3;
+   }
+   else if( ( key = BIO_new_mem_buf( this->keyPrivate->Buffer( ), -1 ) ) == NULL )
+   {
+      status = -1;
+   }
+   else if( ( rsa = PEM_read_bio_RSA_PUBKEY( key, &rsa, NULL, NULL ) ) == NULL )
+   {
+      status = -2;
+      BIO_free( key );
+   }
+   else
+   {
+      status = RSA_public_encrypt( length, plaintext, ciphertext, rsa, RSA_PKCS1_PADDING );
+      BIO_free( key );
+      RSA_free( rsa );
+   }
+
+   return( status );
+}
+
+int Cipher::Verify( const unsigned char* ciphertext, unsigned char* plaintext, int length, const Key& keyPub )
+{
+   int status = 0;
+
+   BIO* key = nullptr;
+   RSA* rsa = nullptr;
+
+   if( ( key = BIO_new_mem_buf( keyPub.Buffer( ), -1 ) ) == NULL )
    {
       status = -1;
    }

@@ -8,8 +8,12 @@ using namespace SecureMigration;
 
 Key::Key( unsigned char* buffer, unsigned int length )
 {
-   this->buffer = buffer;
    this->length = length;
+   this->buffer = new unsigned char[ this->length ];
+   
+   std::memcpy( reinterpret_cast< void* >( this->buffer ), 
+                reinterpret_cast< const void* >( buffer ),
+                this->length );
 }
 
 Key::~Key( void )

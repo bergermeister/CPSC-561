@@ -13,11 +13,14 @@ static DH* getDH( const Key& params );
 Session::Session( void )
 {
    this->params = nullptr;
+   this->keyPub = nullptr;
+   this->keyPri = nullptr;
+   this->keySec = nullptr;
 }
 
 Session::~Session( void )
 {
-   // TODO
+   this->free( );
 }
 
 Session::Session( const Session& session )
@@ -29,7 +32,27 @@ Session& Session::operator=( const Session& session )
 {
    if( this != &session )
    {
+      this->free( );
 
+      if( session.params != nullptr )
+      {
+         this->params = new Key( *session.params );
+      }
+
+      if( session.keyPub != nullptr )
+      {
+         this->keyPub = new Key( *session.keyPub );
+      }
+
+      if( session.keyPri != nullptr )
+      {
+         this->keyPri = new Key( *session.keyPri );
+      }
+
+      if( session.keySec != nullptr )
+      {
+         this->keySec = new Key( *session.keySec );
+      }
    }
 
    return( *this );
@@ -63,6 +86,7 @@ int Session::Initialize( const Key& params )
       keyBuf[ keyLen ] = '\0';
       BN_bn2bin( DH_get0_pub_key( dh ), keyBuf );
       this->keyPub = new Key( keyBuf, keyLen );
+      delete[ ] keyBuf;
 
       /// -# Extract Private Key
       keyLen = BN_num_bytes( DH_get0_priv_key( dh ) );
@@ -70,16 +94,8 @@ int Session::Initialize( const Key& params )
       keyBuf[ keyLen ] = '\0';
       BN_bn2bin( DH_get0_priv_key( dh ), keyBuf );
       this->keyPri = new Key( keyBuf, keyLen );
+      delete[ ] keyBuf;
    }
-
-   //const BIGNUM* p = DH_get0_p( dh );
-   //const BIGNUM* g = DH_get0_g( dh );
-   //const BIGNUM* a = DH_get0_priv_key( dh );
-   //const BIGNUM* A = DH_get0_pub_key( dh );
-   //BIGNUM* a;
-   //a = BN_bin2bn( this->keyPri->Buffer( ), this->keyPri->Length( ), NULL );
-   //int res = BN_cmp( DH_get0_priv_key( dh ), a );
-   //BN_free( a );
 
    return( status );
 }
@@ -197,6 +213,7 @@ int Session::GenerateParams( const unsigned int size, Key** params )
 
       /// -# Create new key to return
       *params = new Key( prmBuf, prmLen );
+      delete[ ] prmBuf;
 
       /// -# Free BIO memory
       BIO_free( prmBio );
@@ -206,88 +223,6 @@ int Session::GenerateParams( const unsigned int size, Key** params )
    }
 
    return( status );
-}
-
-int DiffieHellman::GenerateParams( unsigned int size )
-{
-   DH* privkey;
-   int codes;
-   int secret_size;
-
-   unsigned int   prmLen;
-   unsigned char* prmBuf;
-   BIO*           prmBio = BIO_new( BIO_s_mem( ) );
-
-   // Generate the parameters to be used 
-   if( ( privkey = DH_new( ) ) == NULL )
-   {
-      // ERROR
-   }
-   else if( DH_generate_parameters_ex( privkey, 2048, DH_GENERATOR_2, NULL ) != 1 )
-   {
-      // ERROR
-   }
-   else if( DH_check( privkey, &codes ) != 1 )
-   {
-      // ERROR
-   }
-   else if( codes != 0 )
-   {
-      // Problems have been found with the generated parameters 
-      // Handle these here - we'll just abort for this example 
-      printf( "DH_check failed\n" );
-      abort( );
-   }
-
-   const BIGNUM* p = DH_get0_p( privkey );
-   const BIGNUM* g = DH_get0_g( privkey );
-   const BIGNUM* a = DH_get0_priv_key( privkey );
-   const BIGNUM* A = DH_get0_pub_key( privkey );
-
-   // Generate the public and private key pair 
-   if( 1 != DH_generate_key( privkey ) )
-   {
-      // ERROR
-   }
-   // Send the public key to the peer
-   // How this occurs will be specific to your situation (see main text below) 
-
-   PEM_write_bio_DHparams( prmBio, privkey );
-   
-   prmLen = BIO_pending( prmBio );
-   prmBuf = new unsigned char[ static_cast< unsigned long long >( prmLen ) + 1 ];
-   BIO_read( prmBio, prmBuf, prmLen );
-   prmBuf[ prmLen ] = '\0';
-   std::cout << prmBuf << std::endl;
-   
-   /* Receive the public key from the peer. In this example we're just hard coding a value */
-   BIGNUM* pubkey = NULL;
-   if( 0 == ( BN_dec2bn( &pubkey, "01234567890123456789012345678901234567890123456789" ) ) )
-   {
-      // ERROR
-   }
-   
-   /* Compute the shared secret */
-   unsigned char* secret;
-   if( NULL == ( secret = ( unsigned char* )OPENSSL_malloc( sizeof( unsigned char ) * ( DH_size( privkey ) ) ) ) )
-   {
-      // ERROR
-   }
-   else if( 0 > ( secret_size = DH_compute_key( secret, pubkey, privkey ) ) )
-   {
-      // ERROR
-   }
-
-   // Do something with the shared secret 
-   // Note secret_size may be less than DH_size(privkey) 
-   printf( "The shared secret is:\n" );
-   BIO_dump_fp( stdout, ( const char* )secret, secret_size );
-
-   // Clean up 
-   OPENSSL_free( secret );
-
-   BN_free( pubkey );
-   DH_free( privkey );
 }
 
 static DH* getDH( const Key& params )
@@ -315,5 +250,33 @@ static DH* getDH( const Key& params )
    }
 
    return( dh );
+}
+
+void Session::free( void )
+{
+   if( this->params != nullptr )
+   {
+      delete this->params;
+   }
+
+   if( this->keyPub != nullptr )
+   {
+      delete this->keyPub;
+   }
+
+   if( this->keyPri != nullptr )
+   {
+      delete this->keyPri;
+   }
+
+   if( this->keySec != nullptr )
+   {
+      delete this->keySec;
+   }
+
+   this->params = nullptr;
+   this->keyPub = nullptr;
+   this->keyPri = nullptr;
+   this->keySec = nullptr;
 }
 

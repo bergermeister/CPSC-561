@@ -22,6 +22,8 @@ namespace SecureMigration
          int Initialize( unsigned int keySize );
          int Encrypt( const unsigned char* plaintext, unsigned char* ciphertext, int length, const Key& keyPub );
          int Decrypt( const unsigned char* ciphertext, unsigned char* plaintext, int length );
+         int Sign( const unsigned char* plaintext, unsigned char* ciphertext, int length );
+         int Verify( const unsigned char* ciphertext, unsigned char* plaintext, int length, const Key& keyPub );
 
          const Key* PublicKey( void ) const;
 

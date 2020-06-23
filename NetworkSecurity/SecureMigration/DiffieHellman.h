@@ -29,7 +29,9 @@ namespace SecureMigration
          const Key* Secret( void ) const;
 
          static int GenerateParams( const unsigned int size, Key** params );
+
+      private:    // Private Methods
+         void free( void );
       };
-      int GenerateParams( unsigned int size );
    }
 }
