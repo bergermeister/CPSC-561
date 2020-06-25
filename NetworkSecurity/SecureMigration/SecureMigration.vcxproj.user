@@ -11,7 +11,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerEnvironment>..\OpenSSL\bin</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>DH E:\Projects\CPSC-561\NetworkSecurity\Data\usresco.txt</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>ALL 2048 E:\Projects\CPSC-561\NetworkSecurity\Data\usresco.txt</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerEnvironment>..\OpenSSL\bin</LocalDebuggerEnvironment>
