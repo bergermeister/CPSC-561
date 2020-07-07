@@ -1,11 +1,12 @@
 (* AES EBC Protocol Verifier *)
 free c: 	channel.		(* Declare the public channel for communication *)
-free key: 	bitstring [private].	(* Declare private key *)
+free key: 	bitstring.	(* Declare private key *)
 free plaintext: bitstring [private].	(* Declare Plaintext *)
 
 (* Declare the public encryption and decryption functions *)
 fun encrypt( bitstring, bitstring ): bitstring.
-reduc forall p: bitstring, k: bitstring; 
+reduc 
+	forall p: bitstring, k: bitstring; 
 	decrypt( encrypt( p, k ), k ) = p.
 
 query attacker( key ).			(* Declare attacker of key *)

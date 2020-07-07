@@ -1,0 +1,30 @@
+(* AES CBC Protocol Verifier *)
+free c: 	channel.		(* Declare the public channel for communication *)
+free IV:	bitstring [private]. 	(* Initialization Vector *)
+free key: 	bitstring [private].	(* Declare private key *)
+free plaintext: bitstring [private].	(* Declare Plaintext *)
+
+(* Declare the public encryption and decryption functions *)
+fun encrypt( bitstring, bitstring, bitstring ): bitstring.
+reduc 
+	forall p: bitstring, k: bitstring, iv: bitstring;
+	decrypt( encrypt( p, k, iv ), k, iv ) = p.
+
+query attacker( IV ).			(* Declare attacker of Initialization Vector *)
+query attacker( key ).			(* Declare attacker of key *)
+query attacker( plaintext ).		(* Declare attacker of plaintext *)
+
+let clientA( ) = 
+	let ciphertext = encrypt( plaintext, key, IV ) in
+	out( c, ciphertext ).
+
+let clientB( ) =
+	in( c, ciphertext: bitstring );
+	let p = decrypt( ciphertext, key, IV ) in
+	0.
+
+process
+	( ( !clientA() ) | ( !clientB() ) )
+(*	clientA( plaintext )*)
+(*	!clientB( plaintext )*)
+	

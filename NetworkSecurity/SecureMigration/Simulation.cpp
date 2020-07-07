@@ -215,6 +215,8 @@ int Simulation::RunDiffieHellman( const unsigned char* plaintext, const int size
 
    elapsedCmp = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
 
+   std::cout << "> Plaintext Size:        " << size << " Bytes" << std::endl;
+   std::cout << "> Key Length:            " << keyLen << " Bits" << std::endl;
    std::cout << "> Parameter Generation:  " << std::setprecision( 6 ) << elapsedGen << " Milliseconds" << std::endl;
    std::cout << "> Key Exchange:          " << std::setprecision( 6 ) << elapsedExc << " Milliseconds" << std::endl;
    std::cout << "> Encryption/Decryption: " << std::setprecision( 6 ) << elapsedCmp << " Milliseconds" << std::endl;
@@ -364,6 +366,8 @@ int Simulation::RunRSA( const unsigned char* plaintext, const int size, const in
 
    elapsedCmp = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
 
+   std::cout << "> Plaintext Size:        " << size << " Bytes" << std::endl;
+   std::cout << "> Key Length:            " << keyLen << " Bits" << std::endl;
    std::cout << "> Secret Key:            " << std::setprecision( 6 ) << elapsedGen << " Milliseconds" << std::endl;
    std::cout << "> Key Distribution:      " << std::setprecision( 6 ) << elapsedExc << " Milliseconds" << std::endl;
    std::cout << "> Encryption/Decryption: " << std::setprecision( 6 ) << elapsedCmp << " Milliseconds" << std::endl;

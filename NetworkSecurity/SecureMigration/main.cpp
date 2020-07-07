@@ -14,6 +14,7 @@ int main( int argc, char** argv )
    const unsigned int defKeySize = 1024;
 
    int       status = 0;
+   int       dataLen = 0;
    int       keyLen = 1024;
    UnitTest* ut = NULL;
    char*     buffer = NULL;
@@ -26,7 +27,7 @@ int main( int argc, char** argv )
    else if( argc == 4 )
    {
       keyLen = std::stoi( argv[ 2 ] );
-      status = Utility::ReadFile( argv[ 3 ], &buffer );
+      dataLen = Utility::ReadFile( argv[ 3 ], &buffer );
 
       if( ( argv[ 1 ][ 0 ] == 'D' ) && ( argv[ 1 ][ 1 ] == 'H' ) )
       {
@@ -38,8 +39,8 @@ int main( int argc, char** argv )
       }
       else
       {
-         status = Simulation::RunDiffieHellman( reinterpret_cast< const unsigned char* >( buffer ), status, keyLen );
-         status |= Simulation::RunRSA( reinterpret_cast< const unsigned char* >( buffer ), status, keyLen );
+         status = Simulation::RunDiffieHellman( reinterpret_cast< const unsigned char* >( buffer ), dataLen, keyLen );
+         status |= Simulation::RunRSA( reinterpret_cast< const unsigned char* >( buffer ), dataLen, keyLen );
       }
 
       delete[ ] buffer;
