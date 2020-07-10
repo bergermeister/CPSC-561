@@ -31,11 +31,11 @@ int main( int argc, char** argv )
 
       if( ( argv[ 1 ][ 0 ] == 'D' ) && ( argv[ 1 ][ 1 ] == 'H' ) )
       {
-         status = Simulation::RunDiffieHellman( reinterpret_cast< const unsigned char* >( buffer ), status, keyLen );
+         status = Simulation::RunDiffieHellman( reinterpret_cast< const unsigned char* >( buffer ), dataLen, keyLen );
       }
       else if( ( argv[ 1 ][ 0 ] == 'R' ) && ( argv[ 1 ][ 1 ] == 'S' ) && ( argv[ 1 ][ 2 ] == 'A' ) )
       {
-         status = Simulation::RunRSA( reinterpret_cast< const unsigned char* >( buffer ), status, keyLen );
+         status = Simulation::RunRSA( reinterpret_cast< const unsigned char* >( buffer ), dataLen, keyLen );
       }
       else
       {
