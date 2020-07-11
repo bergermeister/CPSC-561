@@ -3,6 +3,7 @@
 
 // StdLib Includes
 #include <string>
+#include <iostream>
 
 using namespace SecureMigration;
 
@@ -18,7 +19,14 @@ Key::Key( unsigned char* buffer, unsigned int length )
 
 Key::~Key( void )
 {
-   delete[ ] this->buffer;
+   try
+   {
+      //delete[ ] this->buffer;
+   }
+   catch( std::exception& ex )
+   {
+      std::cerr << ex.what( ) << std::endl;
+   }
 }
 
 Key::Key( const Key& key )

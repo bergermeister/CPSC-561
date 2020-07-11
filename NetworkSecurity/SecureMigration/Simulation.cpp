@@ -106,51 +106,71 @@ int Simulation::RunDiffieHellman( const unsigned char* plaintext, const int size
    /// -# Alice generates Diffie-Hellman Parameters (p,g)
    start = std::chrono::high_resolution_clock::now( );
    DiffieHellman::Session::GenerateParams( keyLen, &dhParams );
+   #ifdef _DEBUG
    std::cout << "> Alice Generated (p,g)" << std::endl;
+   #endif
    elapsedGen = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
    start = std::chrono::high_resolution_clock::now( );
 
    /// -# Alice Initializes Private Key a
    Alice.Initialize( *dhParams );
+   #ifdef _DEBUG
    std::cout << "> Alice Initialized a" << std::endl;
-   
+   #endif
+
    /// -# Alice sends parameters (p,g) to Bob
    Bob.Initialize( *dhParams );
+   #ifdef _DEBUG
    std::cout << "> Alice->Bob [p,g]" << std::endl;
+   #endif
 
    /// -# Alice sends parameters (p,g) to Carol
    Carol.Initialize( *dhParams );
+   #ifdef _DEBUG
    std::cout << "> Alice->Carol [p,g]" << std::endl;
+   #endif
 
    /// -# Alice sends g^a mod p to Bob
    Bob.Derive( *Alice.PublicKey( ) );
    keyGab = new Key( *Bob.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Alice->Bob [g^a mod p]" << std::endl;
+   #endif
 
    /// -# Alice sends g^a mod p to Carol
    Carol.Derive( *Alice.PublicKey( ) );
    keyGac = new Key( *Carol.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Alice->Carol [g^a mod p]" << std::endl;
+   #endif
 
    /// -# Bob sends g^b mod p to Alice
    Alice.Derive( *Bob.PublicKey( ) );
    keyGba = new Key( *Alice.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Bob->Alice [g^b mod p]" << std::endl;
+   #endif
 
    /// -# Bob sends g^b mod p to Carol
    Carol.Derive( *Bob.PublicKey( ) );
    keyGbc = new Key( *Carol.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Bob->Carol [g^b mod p]" << std::endl;
+   #endif
 
    /// -# Carol sends g^c mod p to Alice
    Alice.Derive( *Carol.PublicKey( ) );
    keyGca = new Key( *Alice.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Carol->Alice [g^c mod p]" << std::endl;
+   #endif
 
    /// -# Carol sends g^c mod p to Bob
    Bob.Derive( *Carol.PublicKey( ) );
    keyGcb = new Key( *Bob.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Carol->Bob [g^c mod p]" << std::endl;
+   #endif
 
    /// -# Alice sends Bob   [g^ca mod p]
    /// -# Alice sends Carol [g^ba mod p]
@@ -163,42 +183,63 @@ int Simulation::RunDiffieHellman( const unsigned char* plaintext, const int size
    /// -# Alice verifies g^bca == g^cba
    Alice.Derive( *keyGbc ); 
    keyGbca = new Key( *Alice.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Alice derived [g^bca mod p]" << std::endl;
+   #endif
+   
    Alice.Derive( *keyGcb );
    keyGcba = new Key( *Alice.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Alice derived [g^cba mod p]" << std::endl;
    std::cout << "> Alice verifies [g^bca == g^cba]" << ( ( *keyGbca == *keyGcba ) ? "" : " ERROR" ) << std::endl;
+   #endif
 
    /// -# Bob Derives Shared Secrets g^acb and g^cab
    /// -# Bob verifies g^acb == g^cab
    Bob.Derive( *keyGac );
    keyGacb = new Key( *Bob.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Bob derived [g^acb mod p]" << std::endl;
+   #endif
+   
    Bob.Derive( *keyGca );
    keyGcab = new Key( *Bob.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Bob derived [g^cab mod p]" << std::endl;
    std::cout << "> Bob verifies [g^acb == g^cab]" << ( ( *keyGbca == *keyGcba ) ? "" : " ERROR" ) << std::endl;
+   #endif
 
    /// -# Carol Derives Shared Secrets g^abc and g^bac
    /// -# Bob verifies g^abc == g^bac
    Carol.Derive( *keyGab );
    keyGabc = new Key( *Carol.Secret( ) );
+   #ifdef _DEBUG
    std::cout << "> Carol derived [g^abc mod p]" << std::endl;
+   #endif
+
    Carol.Derive( *keyGba );
    keyGbac = new Key( *Carol.Secret( ) );
+   #ifdef _DEBUG  
    std::cout << "> Carol derived [g^bac mod p]" << std::endl;
    std::cout << "> Carol verifies [g^abc == g^bac]" << ( ( *keyGbca == *keyGcba ) ? "" : " ERROR" ) << std::endl;
+   #endif
 
    elapsedExc = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
    start = std::chrono::high_resolution_clock::now( );
 
    /// -# Encrypt data at Bob and send to Carol
    status = AES::Encrypt( plaintext, size, Bob.Secret( )->Buffer( ), &Bob.Secret( )->Buffer( )[ 32 ], ciphertext );
+   #ifdef _DEBUG
    std::cout << "> Bob encrypted plaintext and sent ciphertext to Carol" << std::endl;
+   #endif
 
    /// -# Decrypt data at Carol received from Bob
    status = AES::Decrypt( ciphertext, status, Carol.Secret( )->Buffer( ), &Carol.Secret( )->Buffer( )[ 32 ], decrypted );
+   #ifdef _DEBUG
    std::cout << "> Carol received ciphertext from Bob and decrypted plaintext" << std::endl;
+   #endif
+
+   elapsedCmp = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
 
    /// -# Verify the decrypted data matches the plaintext
    status = std::memcmp( reinterpret_cast< const void* >( plaintext ), reinterpret_cast< const void* >( decrypted ), status );
@@ -211,9 +252,7 @@ int Simulation::RunDiffieHellman( const unsigned char* plaintext, const int size
    {
       std::cout << "> FAILURE: Decrypted text does not match plaintext" << std::endl;
       //Utility::PrintHEX( Alice.Secret( )->Buffer( ), Alice.Secret( )->Length( ), BytesPerLineDef );
-   }
-
-   elapsedCmp = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
+   }  
 
    std::cout << "> Plaintext Size:        " << size << " Bytes" << std::endl;
    std::cout << "> Key Length:            " << keyLen << " Bits" << std::endl;
@@ -300,56 +339,79 @@ int Simulation::RunRSA( const unsigned char* plaintext, const int size, const in
    rsaKey = new Key( buffer, ( keyLen + 7 ) / 8 );
    BN_free( prime );
    delete[ ] buffer;
+   #ifdef _DEBUG
    std::cout << "> Alice generated Secret Key" << std::endl;
+   #endif
    elapsedGen = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
    start = std::chrono::high_resolution_clock::now( );
 
    /// -# Alice, Bob, and Carol generate Public/Private Key Pair
    Alice.Initialize( keyLen );
+   #ifdef _DEBUG
    std::cout << "> Alice generate Public/Private Key Pair" << std::endl;
+   #endif
    Bob.Initialize( keyLen );
+   #ifdef _DEBUG
    std::cout << "> Bob generate Public/Private Key Pair" << std::endl;
+   #endif
    Carol.Initialize( keyLen );
+   #ifdef _DEBUG
    std::cout << "> Carol generate Public/Private Key Pair" << std::endl; 
+   #endif   
    
    /// -# Alice requests Bob's Public Key B
    /// -# Bob sends his Public Key B to Alice
    /// -# Alice encrypts the Secret Key using B
    length = Alice.Encrypt( rsaKey->Buffer( ), keyBobC, bytes, *Bob.PublicKey( ) );
+   #ifdef _DEBUG
    std::cout << "> Alice encrypted " << ( bytes * 8 ) << " bits of " << keyLen << " bit Secret Key using Bob's Public Key" << std::endl;
+   #endif   
 
    /// -# Alice Sends Encrypted Secret Key to Bob
    /// -# Bob Decrypts Secret Key
    ( void )Bob.Decrypt( keyBobC, keyBobP, length );
+   #ifdef _DEBUG  
    std::cout << "> Alice sent the Encrypted Secret Key to Bob" << std::endl;
    std::cout << "> Bob Decypts the Secret Key" << std::endl;
-
+   #endif
+   
    /// -# Alice requests Carol's Public Key C
    /// -# Carol sends her Public Key C to Alice
    /// -# Alice encrypts the Secret Key using C
    length = Alice.Encrypt( rsaKey->Buffer( ), keyCarolC, bytes, *Carol.PublicKey( ) );
+   #ifdef _DEBUG
    std::cout << "> Alice encrypted " << ( bytes * 8 ) << " bits of " << keyLen << " bit Secret Key using Carol's Public Key" << std::endl;
-
+   #endif
+   
    /// -# Alice Sends Encrypted Secret Key to Carol
    /// -# Carol Decrypts Secret Key
    ( void )Carol.Decrypt( keyCarolC, keyCarolP, length );
+   #ifdef _DEBUG
    std::cout << "> Alice sent the Encrypted Secret Key to Carol" << std::endl;
    std::cout << "> Carol Decypts the Secret Key" << std::endl;
+   #endif
+
+   elapsedExc = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
 
    status = std::memcmp( reinterpret_cast< const void* >( keyBobP ),
                          reinterpret_cast< const void* >( keyCarolP ),
                          bytes );
 
-   elapsedExc = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
    start = std::chrono::high_resolution_clock::now( );
 
    /// -# Encrypt data at Bob and send to Carol
    status = AES::Encrypt( plaintext, size, keyBobP, NULL, ciphertext );
+   #ifdef _DEBUG
    std::cout << "> Bob encrypted plaintext and sent ciphertext to Carol" << std::endl;
+   #endif
 
    /// -# Decrypt data at Carol received from Bob
    status = AES::Decrypt( ciphertext, status, keyCarolP, NULL, decrypted );
+   #ifdef _DEBUG
    std::cout << "> Carol received ciphertext from Bob and decrypted plaintext" << std::endl;
+   #endif
+
+   elapsedCmp = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
 
    /// -# Verify the decrypted data matches the plaintext
    status = std::memcmp( reinterpret_cast< const void* >( plaintext ), reinterpret_cast< const void* >( decrypted ), status );
@@ -364,15 +426,13 @@ int Simulation::RunRSA( const unsigned char* plaintext, const int size, const in
       //Utility::PrintHEX( Alice.Secret( )->Buffer( ), Alice.Secret( )->Length( ), BytesPerLineDef );
    }
 
-   elapsedCmp = std::chrono::duration_cast< Milliseconds >( HighResClock::now( ) - start ).count( );
-
    std::cout << "> Plaintext Size:        " << size << " Bytes" << std::endl;
    std::cout << "> Key Length:            " << keyLen << " Bits" << std::endl;
    std::cout << "> Secret Key:            " << std::setprecision( 6 ) << elapsedGen << " Milliseconds" << std::endl;
    std::cout << "> Key Distribution:      " << std::setprecision( 6 ) << elapsedExc << " Milliseconds" << std::endl;
    std::cout << "> Encryption/Decryption: " << std::setprecision( 6 ) << elapsedCmp << " Milliseconds" << std::endl;
    std::cout << "> Total:                 " << std::setprecision( 6 )
-      << ( elapsedGen + elapsedExc + elapsedCmp ) << " Milliseconds" << std::endl;
+             << ( elapsedGen + elapsedExc + elapsedCmp ) << " Milliseconds" << std::endl;
 
    delete rsaKey;
    delete[ ] keyBobP;
